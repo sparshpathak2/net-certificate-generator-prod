@@ -1,0 +1,324 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  // provider = "prisma-client"
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+// User model - ONLY for admins (students don't have accounts)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String // Hashed password - only for admins
+  role      Role     @default(ADMIN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  sessions     Session[]
+  certificates Certificate[]        @relation("AdminCertificates")
+  templates    Template[]
+  approvals    CertificateRequest[] @relation("ApprovedBy")
+}
+
+// Student request for certificate (public form submission)
+// model CertificateRequest {
+//   id              String        @id @default(cuid())
+//   requestId       String        @unique @default(cuid())
+//   studentName     String
+//   studentEmail    String
+//   studentPhone    String?
+//   studentId       String? // Student ID/University Roll Number
+//   courseName      String
+//   completionDate  DateTime?
+//   department      String?
+//   additionalInfo  String? // JSON for additional fields
+//   status          RequestStatus @default(PENDING)
+//   adminNotes      String? // Internal notes from admin
+//   rejectionReason String? // Why request was rejected
+//   certificateUrl  String? // URL to download certificate (after approval)
+//   uniqueCode      String?       @unique // Unique certificate verification code
+
+//   // Foreign keys
+//   approvedById  String?
+//   certificateId String? // Link to Certificate record (when approved)
+
+//   // Relationships
+//   approvedBy  User?        @relation("ApprovedBy", fields: [approvedById], references: [id])
+//   certificate Certificate? @relation("RequestCertificate", fields: [certificateId], references: [id])
+
+//   createdAt  DateTime  @default(now())
+//   updatedAt  DateTime  @updatedAt
+//   approvedAt DateTime?
+//   expiresAt  DateTime? // Certificate expiry date
+
+//   // Tracking
+//   ipAddress String? // Request source IP (for security)
+//   userAgent String? // Browser info
+// }
+
+// Update CertificateRequest to link directly to template
+model CertificateRequest {
+  id              String        @id @default(cuid())
+  requestId       String        @unique @default(cuid())
+  studentName     String
+  studentEmail    String
+  studentPhone    String?
+  studentId       String?
+  courseName      String
+  completionDate  DateTime?
+  department      String?
+  additionalInfo  String?
+  status          RequestStatus @default(PENDING)
+  adminNotes      String?
+  rejectionReason String?
+  certificateUrl  String?
+  uniqueCode      String?       @unique
+
+  // Foreign keys
+  approvedById  String?
+  templateId    String? // Link to the template this request is for
+  certificateId String?
+
+  // Relationships
+  approvedBy  User?        @relation("ApprovedBy", fields: [approvedById], references: [id])
+  template    Template?    @relation(fields: [templateId], references: [id])
+  certificate Certificate? @relation("RequestCertificate", fields: [certificateId], references: [id])
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  approvedAt DateTime?
+  expiresAt  DateTime?
+
+  // Tracking
+  ipAddress String?
+  userAgent String?
+}
+
+// Certificate generation history (BULK generation by admin)
+model Certificate {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  adminId     String // Admin who generated these certificates
+  templateId  String
+
+  // Foreign keys
+  // adminId       String
+  // templateId    String
+
+  // Relationships
+  admin    User     @relation("AdminCertificates", fields: [adminId], references: [id])
+  template Template @relation(fields: [templateId], references: [id])
+
+  totalCount  Int
+  status      BulkStatus @default(PENDING)
+  downloadUrl String? // Path to generated ZIP file
+  createdAt   DateTime   @default(now())
+  completedAt DateTime?
+
+  // Individual certificates from bulk generation
+  certificates BulkCertificateItem[]
+
+  // Link to requests (one certificate generation can cover multiple requests)
+  requests CertificateRequest[] @relation("RequestCertificate")
+
+  excelFile String // Path to uploaded Excel file (if bulk)
+}
+
+// Individual certificates from BULK generation
+model BulkCertificateItem {
+  id             String    @id @default(cuid())
+  certificateId  String
+  recipientName  String
+  recipientEmail String?
+  uniqueCode     String    @unique // For verification
+  filePath       String
+  isIssued       Boolean   @default(false)
+  issuedAt       DateTime?
+  createdAt      DateTime  @default(now())
+
+  // Relationships
+  certificate   Certificate               @relation(fields: [certificateId], references: [id])
+  verifications CertificateVerification[]
+}
+
+// Certificate templates (created by admin)
+// model Template {
+//   id          String  @id @default(cuid())
+//   name        String  @unique
+//   description String?
+//   filePath    String // Path to template file (PDF)
+//   thumbnail   String? // Thumbnail image
+//   width       Int? // Template width in points
+//   height      Int? // Template height in points
+//   isActive    Boolean @default(true)
+//   adminId     String
+
+//   // Relationships
+//   admin       User     @relation(fields: [adminId], references: [id])
+//   fields       TemplateField[]
+//   certificates Certificate[]
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// Certificate templates (created by admin)
+model Template {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  filePath    String // Path to template file (PDF)
+  thumbnail   String? // Thumbnail image
+  width       Int? // Template width in points
+  height      Int? // Template height in points
+  isActive    Boolean @default(true)
+  isPublic    Boolean @default(false) // Whether this template has a public claim form
+  claimUrl    String? @unique // Unique URL for public claim form (e.g., "web-dev-bootcamp-2024")
+  adminId     String
+  requireUrn  Boolean @default(false)
+
+  // Relationships
+  admin        User                 @relation(fields: [adminId], references: [id])
+  fields       TemplateField[]
+  certificates Certificate[]
+  requests     CertificateRequest[] // Requests specifically for this template
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Template field configurations (where text should appear)
+model TemplateField {
+  id         String  @id @default(cuid())
+  templateId String
+  fieldName  String // e.g., "studentName", "courseName", "completionDate"
+  fieldLabel String // Display name
+  x          Float
+  y          Float
+  fontSize   Int     @default(24)
+  fontColor  String  @default("#000000")
+  alignment  String  @default("center")
+  isRequired Boolean @default(true)
+  order      Int     @default(0)
+  isDefault  Boolean @default(false)
+
+  // ✅ ADD THESE FONT PROPERTIES
+  fontFamily   String   @default("Helvetica")  // e.g., "Helvetica", "Lobster", "Roboto"
+  fontWeight   String   @default("regular")    // "regular", "bold", "italic"
+  fontStyle    String?  // Additional style if needed
+
+  // Relationships
+  template Template @relation(fields: [templateId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Email queue for sending certificates
+model EmailQueue {
+  id          String      @id @default(cuid())
+  to          String
+  toName      String
+  subject     String
+  content     String // HTML content
+  attachments String? // JSON array of attachment paths
+  status      EmailStatus @default(PENDING)
+  retryCount  Int         @default(0)
+  error       String?
+  sentAt      DateTime?
+  priority    Int         @default(5) // 1=highest, 10=lowest
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// Audit log for tracking all actions
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String? // Admin ID (if action by admin)
+  userEmail String? // Student email (if action by public)
+  action    String // REQUEST_CERTIFICATE, APPROVE_REQUEST, REJECT_REQUEST, GENERATE_BULK, etc.
+  entity    String // CertificateRequest, Certificate, Template
+  entityId  String
+  details   Json? // Additional details
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+// Verification link for certificate authenticity
+model CertificateVerification {
+  id            String    @id @default(cuid())
+  uniqueCode    String    @unique
+  certificateId String
+  studentEmail  String
+  studentName   String
+  verifiedCount Int       @default(0)
+  lastVerified  DateTime?
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime
+
+  // Relationships
+  certificate BulkCertificateItem @relation(fields: [certificateId], references: [id])
+}
+
+// Rate limiting for public form submissions
+model RateLimit {
+  id           String    @id @default(cuid())
+  email        String // Student email
+  ipAddress    String // IP address
+  requests     Int       @default(1)
+  lastRequest  DateTime  @default(now())
+  blockedUntil DateTime?
+
+  @@unique([email, ipAddress])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// Enums
+enum Role {
+  ADMIN
+  SUPERADMIN
+}
+
+enum RequestStatus {
+  PENDING // Waiting for admin approval
+  APPROVED // Approved, certificate generation pending
+  GENERATED // Certificate generated and sent
+  REJECTED // Rejected by admin
+  EXPIRED // Request expired
+}
+
+enum BulkStatus {
+  PENDING // Not yet started
+  PROCESSING // Currently generating
+  COMPLETED // Successfully generated
+  FAILED // Generation failed
+  PARTIAL // Some certificates failed
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  RETRY
+}
