@@ -6,9 +6,16 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_SUPERUSER}
       POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD}
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD}
+      MIGRATE_USER_PASSWORD: ${MIGRATE_USER_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     cap_drop: [ALL]
     cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
     security_opt: ["no-new-privileges:true"]
@@ -22,7 +29,11 @@ services:
     image: ${DOCKERHUB_USER}/net-cert-backend:${BACKEND_TAG}
     build: ./backend
     env_file: .env
-    depends_on: [postgres]
+    environment:
+      DATABASE_URL: ${DIRECT_DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
     command: npx prisma migrate deploy
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
@@ -32,7 +43,9 @@ services:
     build: ./backend
     restart: unless-stopped
     env_file: .env
-    depends_on: [postgres]
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - backend_uploads:/app/uploads
       - backend_temp:/app/temp

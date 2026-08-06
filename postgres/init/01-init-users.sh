@@ -10,4 +10,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
   CREATE USER migrate_user WITH PASSWORD '${MIGRATE_USER_PASSWORD}';
   GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_DB} TO migrate_user;
+  GRANT ALL ON SCHEMA public TO migrate_user;
+  GRANT CREATE ON SCHEMA public TO migrate_user;
 EOSQL
