@@ -1,5 +1,8 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN');
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'SUPERADMIN');
 
 -- CreateEnum
 CREATE TYPE "RequestStatus" AS ENUM ('PENDING', 'APPROVED', 'GENERATED', 'REJECTED', 'EXPIRED');
@@ -42,6 +45,7 @@ CREATE TABLE "CertificateRequest" (
     "certificateUrl" TEXT,
     "uniqueCode" TEXT,
     "approvedById" TEXT,
+    "templateId" TEXT,
     "certificateId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -95,7 +99,10 @@ CREATE TABLE "Template" (
     "width" INTEGER,
     "height" INTEGER,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
+    "claimUrl" TEXT,
     "adminId" TEXT NOT NULL,
+    "requireUrn" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -115,6 +122,10 @@ CREATE TABLE "TemplateField" (
     "alignment" TEXT NOT NULL DEFAULT 'center',
     "isRequired" BOOLEAN NOT NULL DEFAULT true,
     "order" INTEGER NOT NULL DEFAULT 0,
+    "isDefault" BOOLEAN NOT NULL DEFAULT false,
+    "fontFamily" TEXT NOT NULL DEFAULT 'Helvetica',
+    "fontWeight" TEXT NOT NULL DEFAULT 'regular',
+    "fontStyle" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -183,6 +194,16 @@ CREATE TABLE "RateLimit" (
     CONSTRAINT "RateLimit_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Session" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -196,7 +217,7 @@ CREATE UNIQUE INDEX "CertificateRequest_uniqueCode_key" ON "CertificateRequest"(
 CREATE UNIQUE INDEX "BulkCertificateItem_uniqueCode_key" ON "BulkCertificateItem"("uniqueCode");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Template_name_key" ON "Template"("name");
+CREATE UNIQUE INDEX "Template_claimUrl_key" ON "Template"("claimUrl");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CertificateVerification_uniqueCode_key" ON "CertificateVerification"("uniqueCode");
@@ -206,6 +227,9 @@ CREATE UNIQUE INDEX "RateLimit_email_ipAddress_key" ON "RateLimit"("email", "ipA
 
 -- AddForeignKey
 ALTER TABLE "CertificateRequest" ADD CONSTRAINT "CertificateRequest_approvedById_fkey" FOREIGN KEY ("approvedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CertificateRequest" ADD CONSTRAINT "CertificateRequest_templateId_fkey" FOREIGN KEY ("templateId") REFERENCES "Template"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CertificateRequest" ADD CONSTRAINT "CertificateRequest_certificateId_fkey" FOREIGN KEY ("certificateId") REFERENCES "Certificate"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -227,3 +251,7 @@ ALTER TABLE "TemplateField" ADD CONSTRAINT "TemplateField_templateId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "CertificateVerification" ADD CONSTRAINT "CertificateVerification_certificateId_fkey" FOREIGN KEY ("certificateId") REFERENCES "BulkCertificateItem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
