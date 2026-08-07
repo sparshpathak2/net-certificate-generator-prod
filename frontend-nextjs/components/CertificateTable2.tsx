@@ -243,7 +243,7 @@ export function CertificateTable({
                                 <Download className="mr-2 h-4 w-4" />
                                 Download PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem
+                            {/* <DropdownMenuItem
                                 onClick={() => copyToClipboard(verifyUrl)}
                             >
                                 <Copy className="mr-2 h-4 w-4" />
@@ -254,7 +254,7 @@ export function CertificateTable({
                             >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Certificate
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                             {certificate.recipientEmail && (
                                 <DropdownMenuItem
                                     onClick={() => {
