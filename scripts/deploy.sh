@@ -35,8 +35,11 @@ sed -i "s/^FRONTEND_TAG=.*/FRONTEND_TAG=${TAG}/" .env
 docker compose build nginx
 docker compose pull
 docker compose run --rm migrate
-docker compose up -d
+docker compose up -d --force-recreate
 docker compose ps
+echo "=== Pruning old images (keeping current + recent) ==="
+docker image prune -a -f --filter "until=48h"
+df -h /
 REMOTE
 
 echo "=== Deploy complete: ${TAG} ==="
