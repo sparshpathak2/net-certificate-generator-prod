@@ -11,7 +11,13 @@ FROM node:20-slim AS runner
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 RUN groupadd -r appgroup && useradd -r -g appgroup -m appuser
-COPY --from=builder /app ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/fonts ./fonts
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma.config.ts ./
+RUN npm prune --omit=dev
 RUN mkdir -p uploads temp generated_certificates && chown -R appuser:appgroup /app
 USER appuser
 EXPOSE 5001
