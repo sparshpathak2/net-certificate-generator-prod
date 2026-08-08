@@ -30,7 +30,7 @@ export default function AvatarComponent({
     name: string;
     email: string;
     avatar: string;
-  };
+  } | null;
 }) {
     const router = useRouter();
     const { logout } = useAuth();
@@ -56,32 +56,25 @@ export default function AvatarComponent({
   // Handle logout
   const handleLogout = async () => {
     try {
-      // Call the logout function from useAuth hook
       await logout();
-      
-      // Redirect to login page after successful logout
       router.push("/login");
-      
-      // Optional: Show a success message
-      // console.log("Logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
-      // Handle error if needed (show toast notification, etc.)
     }
   };
+
+  // No session yet (not logged in, or still loading) — don't render the avatar/menu
+  if (!user) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {/* <Button variant="outline">Open</Button> */}
-        {/* <Button variant="outline"> */}
         <Avatar>
           <AvatarImage />
           <AvatarFallback className="rounded-full">{getInitials(user.name)}</AvatarFallback>
-          {/* <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback>{getInitials(user.name)}</AvatarFallback> */}
         </Avatar>
-        {/* </Button> */}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel className="p-0 font-normal">
@@ -96,28 +89,13 @@ export default function AvatarComponent({
             </div>
           </div>
         </DropdownMenuLabel>
-        {/* <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <Sparkles />
-            Upgrade to Pro
-          </DropdownMenuItem>
-        </DropdownMenuGroup> */}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={handleHomeClick}>
             <House />
             Home
           </DropdownMenuItem>
-          {/* <DropdownMenuItem>
-            <CreditCard />
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell />
-            Notifications
-          </DropdownMenuItem> */}
         </DropdownMenuGroup>
-        {/* <DropdownMenuSeparator /> */}
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut />
           Log out
