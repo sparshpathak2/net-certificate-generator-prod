@@ -1,3 +1,5 @@
+"use client"
+
 import AvatarComponent from "@/components/AvatarComponent";
 import ChooseCertificate from "@/components/ChooseCertificate11";
 import { MinimalFileUpload } from "@/components/MinimalFileUpload";
@@ -16,8 +18,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useContext } from "react";
 
 export default function Page() {
+
+  const { user } = useContext(SessionContext);
+
   // This is sample data.
   const userData = {
     user: {
@@ -65,7 +71,7 @@ export default function Page() {
           </div>
           <div>
             {/* <NavUser user={userData.user} /> */}
-            <AvatarComponent user={userData.user} />
+            <AvatarComponent user={user} />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">

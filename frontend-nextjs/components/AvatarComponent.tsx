@@ -36,6 +36,8 @@ export default function AvatarComponent({
     const { logout } = useAuth();
   //   const { isMobile } = useSidebar()
 
+  console.log("user at avatarcomponent", user)
+
   // Get initials from name
   const getInitials = (name: string) => {
     return name
@@ -75,7 +77,7 @@ export default function AvatarComponent({
         {/* <Button variant="outline"> */}
         <Avatar>
           <AvatarImage />
-          <AvatarFallback>CN</AvatarFallback>
+          <AvatarFallback className="rounded-full">{getInitials(user.name)}</AvatarFallback>
           {/* <AvatarImage src={user.avatar} alt={user.name} />
           <AvatarFallback>{getInitials(user.name)}</AvatarFallback> */}
         </Avatar>
@@ -86,7 +88,7 @@ export default function AvatarComponent({
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="h-8 w-8 rounded-lg">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+              <AvatarFallback className="rounded-full">{getInitials(user.name)}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>

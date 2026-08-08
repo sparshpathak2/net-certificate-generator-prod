@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { CertificateTable } from "@/components/CertificateTable2";
 import { SidebarLeft } from "@/components/sidebar-left";
 import {
@@ -19,6 +19,7 @@ import {
 import { Loader2, RefreshCw } from "lucide-react";
 import { NavUser } from "@/components/nav-user";
 import AvatarComponent from "@/components/AvatarComponent";
+import { SessionContext } from "@/components/SessionProvider";
 
 export default function CertificatesPage() {
   const {
@@ -31,6 +32,7 @@ export default function CertificatesPage() {
     useGetPendingRequests();
   const [activeTab, setActiveTab] = useState("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { user } = useContext(SessionContext);
 
   const certificates = data?.certificates || [];
   const pendingCount = pendingData?.count || 0;
@@ -127,7 +129,7 @@ export default function CertificatesPage() {
           {/* <div className="p-2 borter-t"> */}
           <div>
             {/* <NavUser user={userData.user} /> */}
-            <AvatarComponent user={userData.user} />
+            <AvatarComponent user={user} />
           </div>
         </header>
 

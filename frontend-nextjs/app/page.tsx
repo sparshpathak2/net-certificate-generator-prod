@@ -4,9 +4,12 @@ import Image from "next/image";
 import { FileBadge } from "lucide-react";
 import AvatarComponent from "@/components/AvatarComponent";
 import { useRouter } from "next/navigation";
+import { SessionContext } from "@/components/SessionProvider";
+import { useContext } from "react";
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useContext(SessionContext);
 
   // This is sample data.
   const userData = {
@@ -53,7 +56,7 @@ export default function Home() {
             Navodaya Software Center
           </div>
         </div>
-        <AvatarComponent user={userData.user} />
+        <AvatarComponent user={user} />
       </div>
       {/* <div className="grid grid-cols-2 sm:grid-cols-3 py-4 px-4 sm:py-[8%] mx-auto gap-4 sm:gap-8"> */}
       <div className="grid grid-cols-1 py-4 px-4 sm:py-[8%] mx-auto gap-4 sm:gap-8">

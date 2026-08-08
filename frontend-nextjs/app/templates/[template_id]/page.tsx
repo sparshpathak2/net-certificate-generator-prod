@@ -13,12 +13,17 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SidebarLeft } from "@/components/sidebar-left";
+import AvatarComponent from "@/components/AvatarComponent";
+import { useContext } from "react";
+import { SessionContext } from "@/components/SessionProvider";
 
 export default function TemplateEditorPage() {
   const { template_id } = useParams();
   const { data, isLoading } = useGetTemplateById(template_id as string);
   // const { mutate: updateFields, isPending: isSaving } =
   //   useUpdateTemplateFields();
+
+  const { user } = useContext(SessionContext);
 
   const {
     mutate: updateFields,
@@ -152,10 +157,14 @@ export default function TemplateEditorPage() {
     <SidebarProvider>
       <SidebarLeft />
       <SidebarInset className="h-screen flex flex-col">
-        <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-2 border-b bg-background">
-          <div className="flex flex-1 items-center gap-2 px-3">
+        <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3">
+          <div className="flex flex-1 items-center gap-2">
             <SidebarTrigger />
             <h1 className="font-semibold">{data.template.originalName}</h1>
+          </div>
+          <div>
+            {/* <NavUser user={userData.user} /> */}
+            <AvatarComponent user={user} />
           </div>
         </header>
 
