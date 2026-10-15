@@ -243,7 +243,7 @@ function hexToRgb(hexColor) {
 
 
 // ✅ Replace getFont to accept a per-doc cache
-async function getFont(pdfDoc, fontFamily = "Helvetica", fontWeight = "regular", docFontCache = {}) {
+async function getFont(pdfDoc, fontFamily = "neo-sans-pro", fontWeight = "regular", docFontCache = {}) {
   const normalizedFamily = fontFamily?.toLowerCase() || "helvetica";
   const normalizedWeight = fontWeight?.toLowerCase() || "regular";
   const cacheKey = `${normalizedFamily}-${normalizedWeight}`;
@@ -313,6 +313,20 @@ async function getFont(pdfDoc, fontFamily = "Helvetica", fontWeight = "regular",
     roboto:            { regular: "Roboto-Regular.ttf", bold: "Roboto-Bold.ttf", italic: "Roboto-Italic.ttf" },
     "playfair-display":{ regular: "PlayfairDisplay-Regular.ttf" },
     "open-sans":       { regular: "OpenSans-Regular.ttf", bold: "OpenSans-Bold.ttf", italic: "OpenSans-Italic.ttf" },
+    "neo-sans-pro": {
+      regular:    "NeoSansProRegular.OTF",
+      bold:       "NeoSansProBold.OTF",
+      italic:     "NeoSansProItalic.OTF",
+      light:      "NeoSansProLight.OTF",
+      "light-italic": "NeoSansProLightIt.OTF",
+      medium:     "NeoSansProMedium.OTF",
+      "medium-italic": "NeoSansProMedIt.OTF",
+      "bold-italic":   "NeoSansProBoldIt.OTF",
+      black:      "NeoSansProBlack.OTF",
+      "black-italic":  "NeoSansProBlackIt.OTF",
+      ultra:      "NeoSansProUltra.OTF",
+      "ultra-italic":  "NeoSansProUltIt.OTF",
+    },
   };
 
   const fontFile = fontFiles[normalizedFamily]?.[normalizedWeight] || fontFiles[normalizedFamily]?.regular;
@@ -378,7 +392,7 @@ async function generateSingleCertificate(
       y = (field.y / field.pdfHeight) * pdfHeight;
     }
 
-    const font = await getFont(pdfDoc, field.fontFamily || "Helvetica");
+    const font = await getFont(pdfDoc, field.fontFamily || "neo-sans-pro");
     const { r, g, b } = hexToRgb(field.color || "#000000");
     const textWidth = font.widthOfTextAtSize(value, field.fontSize);
 
@@ -475,7 +489,7 @@ async function generateAndStoreCertificate({
     // ✅ Pass docFontCache — fonts are embedded into THIS pdfDoc only
     const font = await getFont(
       pdfDoc,
-      field.fontFamily || "Helvetica",
+      field.fontFamily || "neo-sans-pro",
       field.fontWeight || "regular",
       docFontCache,  // <-- scoped cache
     );
